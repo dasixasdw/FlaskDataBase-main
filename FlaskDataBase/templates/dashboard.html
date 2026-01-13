@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教务管理系统 - 控制台</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --sidebar-bg: #212529; --main-bg: #f8f9fa; }
+        body { background-color: var(--main-bg); font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+        .sidebar { width: 260px; height: 100vh; position: fixed; background: var(--sidebar-bg); color: #adb5bd; transition: all 0.3s; z-index: 1000; }
+        .main-content { margin-left: 260px; padding: 30px; min-height: 100vh; }
+        .nav-link { color: #adb5bd; padding: 12px 20px; margin: 4px 12px; border-radius: 8px; font-weight: 500; }
+        .nav-link:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        .nav-link.active { color: #fff; background: #0d6efd; box-shadow: 0 4px 12px rgba(13,110,253,0.3); }
+        .card { border: none; border-radius: 15px; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05); }
+        .table-container { background: white; border-radius: 15px; overflow: hidden; }
+        .user-profile { padding: 20px; border-bottom: 1px solid #343a40; margin-bottom: 10px; }
+        .badge-role { font-size: 0.75rem; padding: 4px 8px; border-radius: 50px; background: rgba(255,255,255,0.1); color: #eee; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar d-flex flex-column">
+    <div class="user-profile">
+        <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+                <i class="fas fa-user-circle fa-2x text-primary"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <div class="fw-bold text-white text-truncate" style="max-width: 140px;">{{ session['user'] }}</div>
+                <span class="badge-role">{{ role }}</span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav flex-column flex-grow-1">
+        <div class="px-4 py-2 small text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">功能菜单</div>
+
+        {% if role == 'admin' %}
+        <a href="/switch_view/vw_超级管理员_工作台" class="nav-link {% if current_view == 'vw_超级管理员_工作台' %}active{% endif %}">
+            <i class="fas fa-user-shield me-2"></i>账号权限管理
+        </a>
+        <a href="/switch_view/vw_学院负责人_工作台" class="nav-link {% if current_view == 'vw_学院负责人_工作台' %}active{% endif %}">
+            <i class="fas fa-university me-2"></i>学院架构管理
+        </a>
+        {% endif %}
+
+        {% if role in ['admin', 'jwls'] %}
+        <a href="/switch_view/vw_教务老师_待处理工作视图" class="nav-link {% if current_view == 'vw_教务老师_待处理工作视图' %}active{% endif %}">
+            <i class="fas fa-clipboard-list me-2"></i>教务审批任务
+        </a>
+        <a href="/switch_view/vw_教务老师_成绩录入专用视图" class="nav-link {% if current_view == 'vw_教务老师_成绩录入专用视图' %}active{% endif %}">
+            <i class="fas fa-edit me-2"></i>成绩快捷录入
+        </a>
+        {% endif %}
+
+        <a href="/switch_view/vw_学生_个人信息视图" class="nav-link {% if current_view == 'vw_学生_个人信息视图' %}active{% endif %}">
+            <i class="fas fa-id-card me-2"></i>我的个人信息
+        </a>
+        <a href="/switch_view/vw_学生_选课成绩工作台" class="nav-link {% if current_view == 'vw_学生_选课成绩工作台' %}active{% endif %}">
+            <i class="fas fa-file-invoice me-2"></i>我的成绩单
+        </a>
+
+        <div class="mt-auto p-4">
+            <a href="/logout" class="btn btn-outline-danger btn-sm w-100"><i class="fas fa-power-off me-2"></i>退出系统</a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold mb-1">{{ current_view }}</h4>
+                <p class="text-muted small mb-0">系统时间：2026年1月14日</p>
+            </div>
+            {% if fields and role == 'admin' %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+                <i class="fas fa-plus me-1"></i> 新增记录
+            </button>
+            {% endif %}
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for cat, msg in messages %}
+            <div class="alert alert-{{ cat }} alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+                <i class="fas {% if cat=='success' %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %} me-2"></i>
+                {{ msg }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}{% endif %}
+        {% endwith %}
+
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                {% for col in columns %}<th>{{ col }}</th>{% endfor %}
+                                <th class="text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                {% for cell in row %}
+                                <td>{{ cell if cell != None else '<span class="text-muted small">未填写</span>'|safe }}</td>
+                                {% endfor %}
+                                <td class="text-center">
+                                    {% if fields %}
+                                    <div class="btn-group shadow-sm">
+                                        <button class="btn btn-sm btn-white border"
+                                                onclick='openEditModal("{{ row[0] }}", {{ row | tojson | safe }})'>
+                                            <i class="fas fa-edit text-primary me-1"></i>修改
+                                        </button>
+                                        {% if role == 'admin' %}
+                                        <a href="/delete/{{ row[0] }}" class="btn btn-sm btn-white border text-danger"
+                                           onclick="return confirm('确定要永久删除此记录吗？')">
+                                            <i class="fas fa-trash-alt me-1"></i>删除
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted small"><i class="fas fa-lock me-1"></i>只读</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not data %}
+                            <tr><td colspan="{{ columns|length + 1 }}" class="text-center py-5 text-muted">暂无符合条件的数据</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form action="/insert" method="POST" class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="fw-bold"><i class="fas fa-plus-circle text-success me-2"></i>添加新数据</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                {% for f in fields %}
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">{{ f }}</label>
+                    <input type="text" name="{{ f }}" class="form-control form-control-lg fs-6" placeholder="请输入{{ f }}" required>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                <button type="submit" class="btn btn-success px-4">保存入库</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form action="/update" method="POST" class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>编辑记录 (ID: <span id="display_id"></span>)</h5>
+            </div>
+            <div class="modal-body py-4">
+                <input type="hidden" name="target_id" id="edit_id">
+                {% for f in fields %}
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-primary">{{ f }}</label>
+                    <input type="text" name="{{ f }}" id="edit_{{ f }}" class="form-control form-control-lg fs-6" required>
+                </div>
+                {% endfor %}
+                {% if role == 'stu' %}
+                <div class="alert alert-info py-2 small mb-0 mt-3">
+                    <i class="fas fa-info-circle me-1"></i> 提示：您的修改请求将直接同步至教务系统，请务必核实。
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                <button type="submit" class="btn btn-primary px-4">保存更改</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+
+
+<script>
+/**
+ * 核心逻辑：填充修改模态框
+ * 使用安全渲染的 columns 和 fields 变量进行索引对齐
+ */
+function openEditModal(id, rowData) {
+    // 设置主键
+    document.getElementById('edit_id').value = id;
+    document.getElementById('display_id').innerText = id;
+
+    // 获取后端注入的字段映射配置
+    const fields = {{ fields | tojson | safe }};   // 允许修改的物理字段
+    const columns = {{ columns | tojson | safe }}; // 当前视图显示的列名
+
+    // 自动填充匹配的数据
+    fields.forEach(f => {
+        let colIndex = columns.indexOf(f);
+        if (colIndex !== -1) {
+            let val = rowData[colIndex];
+            let inputField = document.getElementById('edit_' + f);
+            if (inputField) {
+                inputField.value = (val !== null && val !== undefined) ? val : '';
+            }
+        }
+    });
+
+    // 弹出模态框
+    var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    editModal.show();
+}
+</script>
+</body>
+</html>
