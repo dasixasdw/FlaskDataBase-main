@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, text
 
 # 替换为你实际的密码
-DB_URI = 'mysql+pymysql://root:Wyh_%400601_eki@localhost/大学教务管理系统?charset=utf8mb4'
+DB_URI = 'mysql+pymysql://root:password@localhost/大学教务管理系统?charset=utf8mb4'
 
 engine = create_engine(DB_URI)
 
@@ -12,4 +12,5 @@ try:
         print("✅ 数据库连接成功！配置正确。")
 except Exception as e:
     print("❌ 连接失败，请检查配置。")
+
     print(f"具体错误信息: {e}")
