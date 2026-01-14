@@ -6,7 +6,7 @@ app = Flask(__name__)
 app.secret_key = 'university_super_secret_safe_key_2026'
 
 # 1. 数据库配置 (使用你的最新密码)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Wyh_%400601_eki@127.0.0.1/大学教务管理系统?charset=utf8mb4'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:password@127.0.0.1/大学教务管理系统?charset=utf8mb4'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -217,4 +217,5 @@ def logout():
 
 
 if __name__ == '__main__':
+
     app.run(debug=True)
